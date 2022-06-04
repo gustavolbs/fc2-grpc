@@ -1,4 +1,4 @@
-module github.com/gustavolbs/learning-grpc
+module github.com/gustavolbs/fc2-grpc
 
 go 1.16
 
