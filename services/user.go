@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"time"
 
 	"github.com/gustavolbs/fc2-grpc/pb"
@@ -12,6 +14,7 @@ import (
 // 	AddUser(context.Context, *User) (*User, error)
 // 	mustEmbedUnimplementedUserServiceServer()
 //  AddUserVerbose(ctx context.Context, in *User, opts ...grpc.CallOption) (UserService_AddUserVerboseClient, error)
+//  AddUsers(ctx context.Context, opts ...grpc.CallOption) (UserService_AddUsersClient, error)
 // }
 
 type UserService struct {
@@ -73,3 +76,29 @@ func (*UserService) AddUserVerbose(req *pb.User, stream pb.UserService_AddUserVe
 
 	return nil;
 };
+
+func (*UserService) AddUsers(stream pb.UserService_AddUsersServer) error {
+	users := []*pb.User{}
+
+	for {
+		req, err := stream.Recv()
+
+		if err == io.EOF {
+			return stream.SendAndClose(&pb.Users{
+				User: users,
+			})
+		}
+
+		if err != nil {
+			log.Fatalf("Error receiving stream: %v", err)
+		}
+
+		users = append(users, &pb.User{
+			Id: req.GetId(),
+			Name: req.GetName(),
+			Email: req.GetEmail(),
+		})
+
+		fmt.Println("Adding", req.GetName())
+	}
+}
